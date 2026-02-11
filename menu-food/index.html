@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Menu | Premium Gastro Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --carbon: #0A0A0A;
+            --carbon-light: #121212;
+            --naranja: #FF4D00;
+            --mostaza: #FFB800;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--carbon); 
+            color: #F5F5F5;
+            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
+        }
+
+        /* Patrón de Diseño: Glassmorphism Naranja */
+        .glass-header { 
+            background: rgba(10, 10, 10, 0.85); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 77, 0, 0.1);
+        }
+        
+        /* Tarjetas con profundidad */
+        .product-card {
+            background: var(--carbon-light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .product-card:hover {
+            border-color: rgba(255, 77, 0, 0.3);
+            transform: translateY(-4px);
+        }
+
+        /* Botón de acción con resplandor (Gastro-Pattern) */
+        .orange-glow {
+            box-shadow: 0 4px 20px rgba(255, 77, 0, 0.4);
+        }
+
+        /* Modal Elite */
+        #product-modal {
+            background: rgba(0,0,0,0.95);
+            display: none;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        #product-modal.active { display: flex; opacity: 1; }
+
+        .modal-sheet {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+            background: linear-gradient(180deg, #161616 0%, #0A0A0A 100%);
+        }
+        #product-modal.active .modal-sheet { transform: translateY(0); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Animación de carga de items */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeInUp 0.5s ease forwards; }
+
+        /* Badge Naranja */
+        .badge-hot {
+            background: linear-gradient(90deg, var(--naranja), #FF8000);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            color: white;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <script>
+        const BUSINESS_CONFIG = {
+            name: "BURGER PLUS",
+            phone: "584145811936", // EDITAR: Tu WhatsApp
+            currency: "$",
+            logo: "https://cdn-icons-png.flaticon.com/512/3654/3654897.png",
+            heroImage: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=1200&auto=format&fit=crop",
+            locationUrl: "https://maps.app.goo.gl/PwWGwS24dGAsRXDp7?g_st=aw",
+            address: "Av. Central, Valencia 2001, Carabobo",
+            categories: [
+                { id: "burgers", name: "Burgers", icon: "🍔" },
+                { id: "sushi", name: "Sushi Rolls", icon: "🥢" },
+                { id: "pizza", name: "Pizzas", icon: "🍕" },
+                { id: "bebidas", name: "Bebidas", icon: "🥤" }
+            ],
+            products: [
+                { id: 1, categoryId: "burgers", name: "Truffle Beast", description: "Carne dry-aged de 200g, aceite de trufa blanca, arúgula orgánica y provolone.", price: 12.50, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", hot: true },
+                { id: 2, categoryId: "burgers", name: "Smash Mustard", description: "Doble carne smash, cebolla grillé, pepinillos y mostaza artesanal.", price: 9.00, image: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=800", hot: false },
+                { id: 3, categoryId: "sushi", name: "Dragon Roll", description: "Cangrejo crocante, aguacate, cubierto de anguila y salsa unagi.", price: 14.00, image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800", hot: true },
+                { id: 4, categoryId: "pizza", name: "Diavola Honey", description: "Salami picante, pepperoncino y miel hot sobre masa madre.", price: 11.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800", hot: false },
+                { id: 5, categoryId: "bebidas", name: "Passion Fruit", description: "Zumo de parcha natural con un toque de hierbabuena fresca.", price: 4.00, image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=800", hot: false }
+            ]
+        };
+    </script>
+
+    <!-- Header Sticky -->
+    <nav class="fixed top-0 w-full z-50 glass-header px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1 shadow-[0_0_15px_rgba(255,77,0,0.2)]">
+                <img id="nav-logo" src="" alt="Logo" class="w-full object-contain">
+            </div>
+            <span id="nav-name" class="font-extrabold text-sm tracking-widest text-white"></span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span class="text-[10px] font-bold text-gray-400">ABIERTO</span>
+        </div>
+    </nav>
+
+    <!-- Hero Section con Overlays Naranjas -->
+    <header id="hero-bg" class="relative h-[45vh] w-full flex items-center justify-center bg-cover bg-center">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-carbon/60 to-carbon"></div>
+        <div class="absolute inset-0 bg-naranja/10"></div> <!-- Tinte sutil naranja -->
+        <div class="relative z-10 text-center animate-fade">
+            <h1 class="text-5xl [text-shadow:0_0_12px_black] font-black text-white italic leading-none mb-2">BURGUER<br><span class="text-naranja">PLUS</span></h1>
+            <div class="h-1 w-12 bg-mostaza mx-auto rounded-full"></div>
+        </div>
+    </header>
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="sticky top-[73px] z-40 bg-carbon pt-2 border-b border-white/5">
+        <div class="px-6 mb-4">
+            <div class="relative">
+                <input type="text" id="search-bar" placeholder="¿Qué deseas probar hoy?" 
+                    class="w-full bg-[#161616] border border-naranja/20 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-naranja focus:ring-1 focus:ring-naranja transition-all">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-naranja">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+            </div>
+        </div>
+        <div id="cat-container" class="no-scrollbar flex gap-3 overflow-x-auto px-6 pb-4"></div>
+    </div>
+
+    <!-- Product Grid -->
+    <main class="px-6 py-6 pb-40">
+        <div id="product-grid" class="grid grid-cols-1 gap-6"></div>
+    </main>
+
+    <!-- Footer de Ubicación Premium -->
+    <footer id="location" class="px-6 py-16 bg-[#080808] border-t border-naranja/10 text-center">
+        <div class="bg-naranja/5 inline-block p-6 rounded-[3rem] border border-naranja/20 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-naranja" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </div>
+        <h3 class="text-3xl font-black text-white mb-2 italic">ENCUÉNTRANOS</h3>
+        <p id="biz-address" class="text-gray-500 text-sm mb-8 tracking-wide uppercase font-medium"></p>
+        <a id="maps-link" href="" target="_blank" class="orange-glow inline-flex items-center gap-3 bg-naranja text-white font-black px-10 py-4 rounded-2xl hover:scale-105 transition-transform active:scale-95">
+            VER MAPA EN VIVO
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+        </a>
+    </footer>
+
+    <!-- Carrito Flotante Naranja -->
+    <div id="cart-container" class="fixed bottom-0 left-0 w-full px-6 pb-10 pt-6 glass-header border-t border-naranja/20 transform translate-y-full transition-transform duration-500 z-[60]">
+        <div class="flex items-center justify-between gap-6">
+            <div class="flex flex-col">
+                <span id="cart-total" class="text-3xl font-black text-white">$0.00</span>
+                <span id="cart-items-qty" class="text-naranja text-xs font-bold uppercase tracking-widest">0 PRODUCTOS</span>
+            </div>
+            <button onclick="sendOrder()" class="orange-glow flex-grow bg-naranja text-white font-black py-5 rounded-2xl flex justify-center items-center gap-2 active:scale-95 transition-all text-sm uppercase tracking-tighter">
+                FINALIZAR PEDIDO
+            </button>
+        </div>
+    </div>
+
+    <!-- PRODUCT MODAL (ELITE UI) -->
+    <div id="product-modal" class="fixed inset-0 z-[100] flex items-end justify-center">
+        <div class="modal-sheet w-full max-w-xl rounded-t-[3.5rem] overflow-hidden shadow-2xl border-t border-naranja/30">
+            <div class="relative h-[45vh]">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#161616] to-transparent"></div>
+                <button onclick="closeModal()" class="absolute top-8 right-8 bg-black/40 backdrop-blur-xl p-3 rounded-full text-white border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="p-10 -mt-12 relative z-10">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 id="modal-title" class="text-4xl font-black text-white tracking-tighter italic"></h2>
+                        <p id="modal-desc" class="text-gray-400 text-sm leading-relaxed mt-2"></p>
+                    </div>
+                    <span id="modal-price" class="text-3xl font-black text-naranja italic"></span>
+                </div>
+                
+                <div class="mt-10 flex items-center gap-6">
+                    <div class="flex items-center bg-white/5 rounded-2xl border border-white/5 p-1">
+                        <button onclick="updateModalQty(-1)" class="w-14 h-14 rounded-xl hover:bg-white/5 text-2xl font-bold transition-all">-</button>
+                        <span id="modal-qty" class="text-2xl font-black w-12 text-center text-white">1</span>
+                        <button onclick="updateModalQty(1)" class="w-14 h-14 rounded-xl bg-naranja text-white text-2xl font-bold shadow-lg shadow-naranja/30">+</button>
+                    </div>
+                    <button id="modal-add-btn" class="flex-grow bg-white text-black font-black h-16 rounded-2xl text-lg uppercase tracking-tight hover:bg-gray-200 transition-all">
+                        AÑADIR AL PEDIDO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let currentModalProduct = null;
+        let modalQty = 1;
+
+        function init() {
+            document.getElementById('nav-name').innerText = BUSINESS_CONFIG.name;
+            document.getElementById('nav-logo').src = BUSINESS_CONFIG.logo;
+            document.getElementById('hero-bg').style.backgroundImage = `url('${BUSINESS_CONFIG.heroImage}')`;
+            document.getElementById('biz-address').innerText = BUSINESS_CONFIG.address;
+            document.getElementById('maps-link').href = BUSINESS_CONFIG.locationUrl;
+            
+            renderCategories();
+            renderProducts();
+
+            document.getElementById('search-bar').addEventListener('input', (e) => {
+                renderProducts(e.target.value.toLowerCase());
+            });
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('cat-container');
+            let html = `<button onclick="setCat('all')" id="cat-all" class="cat-btn active px-7 py-3 rounded-2xl text-[10px] font-black uppercase whitespace-nowrap bg-naranja text-white">TODOS</button>`;
+            BUSINESS_CONFIG.categories.forEach(cat => {
+                html += `<button onclick="setCat('${cat.id}')" id="cat-${cat.id}" class="cat-btn px-7 py-3 rounded-2xl text-[10px] font-black uppercase whitespace-nowrap bg-[#161616] text-gray-400 border border-white/5">${cat.icon} ${cat.name}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setCat(id) {
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('active', 'bg-naranja', 'text-white');
+                b.classList.add('bg-[#161616]', 'text-gray-400');
+            });
+            const active = document.getElementById('cat-'+id);
+            active.classList.add('active', 'bg-naranja', 'text-white');
+            active.classList.remove('bg-[#161616]', 'text-gray-400');
+            renderProducts('', id === 'all' ? '' : id);
+        }
+
+        function renderProducts(search = '', catId = '') {
+            const grid = document.getElementById('product-grid');
+            const filtered = BUSINESS_CONFIG.products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+                const matchesCat = catId === '' || p.categoryId === catId;
+                return matchesSearch && matchesCat;
+            });
+
+            grid.innerHTML = filtered.map((p, i) => `
+                <div class="product-card rounded-[2.5rem] p-5 flex gap-5 items-center animate-fade" style="animation-delay: ${i*0.1}s">
+                    <div class="relative flex-shrink-0" onclick="openModal(${p.id})">
+                        <img src="${p.image}" class="w-28 h-28 object-cover rounded-[2rem] shadow-xl">
+                        ${p.hot ? '<div class="absolute -top-2 -right-2 badge-hot">HOT</div>' : ''}
+                    </div>
+                    <div class="flex-grow">
+                        <h3 class="font-bold text-white text-lg tracking-tight uppercase italic">${p.name}</h3>
+                        <p class="text-gray-500 text-[11px] leading-snug mt-1 line-clamp-2 font-medium">${p.description}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-naranja font-black text-xl italic">${BUSINESS_CONFIG.currency}${p.price.toFixed(2)}</span>
+                            <button onclick="openModal(${p.id})" class="bg-naranja/10 p-3 rounded-2xl text-naranja border border-naranja/20 active:scale-90 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id) {
+            const p = BUSINESS_CONFIG.products.find(x => x.id === id);
+            currentModalProduct = p;
+            modalQty = 1;
+            document.getElementById('modal-img').src = p.image;
+            document.getElementById('modal-title').innerText = p.name;
+            document.getElementById('modal-desc').innerText = p.description;
+            document.getElementById('modal-price').innerText = `${BUSINESS_CONFIG.currency}${p.price.toFixed(2)}`;
+            document.getElementById('modal-qty').innerText = modalQty;
+            document.getElementById('modal-add-btn').onclick = () => addToCartFromModal();
+            
+            document.getElementById('product-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function updateModalQty(delta) {
+            modalQty = Math.max(1, modalQty + delta);
+            document.getElementById('modal-qty').innerText = modalQty;
+        }
+
+        function addToCartFromModal() {
+            const existing = cart.find(item => item.id === currentModalProduct.id);
+            if (existing) { existing.qty += modalQty; } 
+            else { cart.push({ ...currentModalProduct, qty: modalQty }); }
+            updateCartUI();
+            closeModal();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-container');
+            if (cart.length > 0) container.classList.remove('translate-y-full');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-total').innerText = `${BUSINESS_CONFIG.currency}${total.toFixed(2)}`;
+            document.getElementById('cart-items-qty').innerText = `${count} ITEMS EN EL CARRITO`;
+        }
+
+        function sendOrder() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let text = `🔥 *NUEVO PEDIDO - ${BUSINESS_CONFIG.name}* 🔥\n`;
+            text += `━━━━━━━━━━━━━━━━━━━━\n`;
+            cart.forEach(item => {
+                text += `🔸 *${item.qty}x* ${item.name.toUpperCase()}\n   _Precio: $${(item.price * item.qty).toFixed(2)}_\n`;
+            });
+            text += `━━━━━━━━━━━━━━━━━━━━\n`;
+            text += `💰 *TOTAL A PAGAR: ${BUSINESS_CONFIG.currency}${total.toFixed(2)}*\n\n`;
+            text += `📍 _Quedo a la espera de la confirmación para enviar mi ubicación._`;
+            window.open(`https://wa.me/${BUSINESS_CONFIG.phone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
