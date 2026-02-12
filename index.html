@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full antialiased">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>REYES BURGER | Menú Premium</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #FF4500;
+            --bg-dark: #0D0D0D;
+            --card-bg: #1A1A1A;
+            --text-main: #FFFFFF;
+            --text-muted: #9CA3AF;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: "Outfit", sans-serif;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(13, 13, 13, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Search Bar Glass */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Utilities */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .active-scale:active { transform: scale(0.96); transition: transform 0.1s; }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeUp 0.4s ease-out forwards; }
+
+        /* Category Active State */
+        .cat-active {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+            border: none;
+            fill: white;
+        }
+        
+        .cat-inactive {
+            fill: #9CA3AF;
+        }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper input:checked + div {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        /* Toast */
+        #toast {
+            visibility: hidden; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateY(20px) translateX(-50%);
+        }
+        #toast.show {
+            visibility: visible; opacity: 1; transform: translateY(0) translateX(-50%);
+        }
+    </style>
+</head>
+
+<body class="w-full pb-32">
+    
+    <script>
+        // --- SISTEMA DE ICONOS SVG ---
+        // Definimos los iconos aquí para usarlos en toda la app sin emojis
+        const ICONS = {
+            burger: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15h18"/><path d="M3 20h18"/><path d="M12 4c-4.4 0-8 3-8 6h16c0-3-3.6-6-8-6z"/><path d="M12 15v5"/></svg>`,
+            fries: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14.5A2.5 2.5 0 0 0 10.5 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.4.8.9 1.7 1.9 2.8z"/></svg>`,
+            sushi: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><path d="M8 12h.01"/><path d="M16 12h.01"/></svg>`,
+            pizza: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 11l-3 3"/><path d="M11 15l3-3"/><path d="M14.1 3.5l7 7L4 20h0a4 4 0 0 1-4-4v0l9.5-12.5z"/></svg>`,
+            drink: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="1" x2="6" y2="8"/><line x1="10" y1="1" x2="10" y2="8"/><line x1="14" y1="1" x2="14" y2="8"/></svg>`,
+            star: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+            search: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`
+        };
+
+        const BUSINESS_CONFIG = {
+            name: "Samy's Food",
+            phone: "584145811936",
+            currency: "$",
+            logo: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+            heroImage: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1365&auto=format&fit=crop",
+            address: "Loas Samanes, Valencia 2001, Carabobo",
+            categories: [
+                { id: "burgers", name: "Burgers", icon: ICONS.burger },
+                { id: "combos", name: "Combos", icon: ICONS.fries },
+                { id: "sushi", name: "Sushi", icon: ICONS.sushi },
+                { id: "pizza", name: "Pizzas", icon: ICONS.pizza },
+                { id: "bebidas", name: "Bebidas", icon: ICONS.drink },
+            ],
+            products: [
+                { id: 1, categoryId: "burgers", name: "The King Truffle", description: "200g Carne Angus, mayonesa de trufa negra, rúcula y queso brie.", price: 14.50, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", hot: true },
+                { id: 2, categoryId: "burgers", name: "Classic Smash", description: "Doble carne aplastada, queso americano, cebolla caramelizada.", price: 9.99, image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=800", hot: false },
+                { id: 3, categoryId: "sushi", name: "Volcano Roll", description: "Langostino tempura, topping de kani picante y salsa de anguila.", price: 12.00, image: "https://images.unsplash.com/photo-1617196019286-dc35f5dc11d5?w=800", hot: true },
+                { id: 4, categoryId: "pizza", name: "Hot Honey Pepperoni", description: "Pepperoni crujiente, mozzarella y miel picante.", price: 13.50, image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800", hot: false },
+                { id: 5, categoryId: "combos", name: "Combo Pareja", description: "2 Smash Burgers + 2 Papas Medianas + 2 Bebidas.", price: 22.00, image: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=800", hot: false }
+            ],
+            modifiers: [
+                { id: "papas", name: "Papas Fritas", price: 2.50 },
+                { id: "refresco", name: "Coca Cola", price: 1.50 },
+                { id: "bacon", name: "Extra Bacon", price: 1.00 }
+            ]
+        };
+    </script>
+
+    <nav class="fixed top-0 w-full z-50 glass px-5 py-3 flex justify-between items-center transition-all duration-300" id="navbar">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                <img id="nav-logo" src="" alt="Logo" class="w-6 h-6 object-contain filter invert" />
+            </div>
+            <div>
+                <h1 id="nav-name" class="font-display font-black text-lg tracking-tight leading-none text-white"></h1>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-green-400 uppercase tracking-widest">Abierto</span>
+                </div>
+            </div>
+        </div>
+        <button class="bg-[#2A2A2A] p-2 rounded-full border border-white/10 active-scale">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+    </nav>
+
+    <header id="hero-bg" class="relative h-[45vh] w-full flex items-end bg-cover bg-center">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/60 to-transparent"></div>
+        
+        <div class="relative z-10 px-5 pb-6 w-full animate-fade-up">
+            <span class="px-3 py-1 rounded-full bg-[#FF4500]/20 text-[#FF4500] border border-[#FF4500]/30 text-[10px] font-bold uppercase tracking-widest mb-3 inline-block backdrop-blur-md">
+                Delivery Rápido ⚡️
+            </span>
+            <h2 class="font-display text-4xl font-black text-white leading-[1.1] mb-2">
+                ¿Qué se te antoja <br/><span class="text-[#FF4500]">comer hoy?</span>
+            </h2>
+            <p class="text-gray-400 text-sm max-w-[80%]">Las mejores burgers de la ciudad, directo a tu puerta.</p>
+        </div>
+    </header>
+
+    <div class="sticky top-[68px] z-40 bg-[#0D0D0D]/95 backdrop-blur-xl border-b border-white/5 py-4 shadow-2xl">
+        
+        <div class="px-5 mb-4">
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-[#FF4500] transition-colors">
+                    <script>document.write(ICONS.search)</script>
+                </div>
+                <input type="text" id="search-input" placeholder="Buscar (ej. Truffle, Sushi...)" 
+                    class="w-full glass-input text-white rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF4500] placeholder-gray-500 transition-all" />
+            </div>
+        </div>
+
+        <div id="cat-container" class="no-scrollbar flex gap-3 overflow-x-auto px-5 scroll-smooth snap-x">
+            </div>
+    </div>
+
+    <main class="px-5 py-8 min-h-screen">
+        <div class="flex justify-between items-end mb-6">
+            <h3 class="font-display text-xl font-bold text-white">Menú</h3>
+            <span class="text-xs text-gray-500 font-medium" id="result-count">Mostrando todo</span>
+        </div>
+        
+        <div id="product-grid" class="grid grid-cols-1 gap-6"></div>
+        
+        <div id="empty-state" class="hidden text-center py-10">
+            <p class="text-gray-500 text-sm">No encontramos productos con ese nombre.</p>
+        </div>
+    </main>
+
+    <footer class="px-6 py-10 bg-[#080808] border-t border-white/5 text-center mt-10">
+        <div class="w-16 h-1 bg-white/10 rounded-full mx-auto mb-6"></div>
+        <p class="text-gray-500 text-xs font-bold tracking-widest uppercase mb-4">Ubicación</p>
+        <p id="biz-address" class="text-white font-medium text-sm mb-6"></p>
+        <div class="flex justify-center gap-4">
+            <a id="maps-link" href="" target="_blank" class="glass-card px-6 py-3 rounded-xl text-xs font-bold text-white active-scale flex items-center gap-2">
+                 Ver en Mapa
+            </a>
+            <a href="https://www.instagram.com/samysfood_val?igsh=eWlmN2oxd2pmMHZ4" class="glass-card px-6 py-3 rounded-xl text-xs font-bold text-white active-scale flex items-center gap-2">
+                 Instagram
+            </a>
+        </div>
+        <p class="mt-8 text-[10px] text-gray-700">Samy's Food</p>
+    </footer>
+
+    <div id="cart-container" class="fixed bottom-6 left-0 w-full px-5 z-[90] translate-y-[150%] transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+        <button onclick="sendOrder()" class="w-full bg-[#FF4500] rounded-2xl p-1 shadow-[0_10px_40px_-10px_rgba(255,69,0,0.6)] active-scale relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+            
+            <div class="bg-[#FF4500] border border-white/10 rounded-xl px-5 py-4 flex justify-between items-center h-full">
+                <div class="flex items-center gap-3">
+                    <div class="bg-black/20 text-white font-bold h-8 w-8 rounded-lg flex items-center justify-center text-sm" id="cart-items-qty">0</div>
+                    <div class="flex flex-col items-start">
+                        <span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">Ver mi pedido</span>
+                        <span class="text-xs text-white/60">Listo para enviar</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="cart-total" class="font-display font-black text-xl text-white">$0.00</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </div>
+            </div>
+        </button>
+    </div>
+
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-[#1A1A1A] border border-[#FF4500]/50 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-md">
+        <div class="bg-[#FF4500] rounded-full p-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="text-sm font-bold">Agregado al carrito</span>
+    </div>
+
+    <div id="product-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="modal-backdrop" onclick="closeModal()"></div>
+        
+        <div class="absolute bottom-0 left-0 w-full bg-[#141414] rounded-t-[32px] transform translate-y-full transition-transform duration-300 flex flex-col max-h-[90vh]" id="modal-content">
+            <div class="w-full flex justify-center pt-3 pb-1" onclick="closeModal()">
+                <div class="w-12 h-1.5 bg-gray-700 rounded-full"></div>
+            </div>
+
+            <div class="overflow-y-auto px-6 pt-2 pb-32 no-scrollbar">
+                <div class="relative w-full h-64 rounded-2xl overflow-hidden mb-6 shadow-2xl">
+                    <img id="modal-img" src="" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent opacity-60"></div>
+                </div>
+
+                <div class="flex justify-between items-start mb-2">
+                    <h2 id="modal-title" class="font-display text-3xl font-black text-white leading-tight max-w-[70%]"></h2>
+                    <span id="modal-price" class="font-display text-2xl font-bold text-[#FF4500]"></span>
+                </div>
+                
+                <p id="modal-desc" class="text-gray-400 text-sm leading-relaxed mb-8 font-light"></p>
+
+                <div class="mb-6">
+                    <h4 class="font-display text-sm font-bold text-white uppercase tracking-widest mb-4">Extras (Opcional)</h4>
+                    <div class="space-y-3" id="modifiers-container"></div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 w-full bg-[#141414] border-t border-white/5 p-5 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center bg-[#2A2A2A] rounded-xl h-14 p-1">
+                        <button onclick="updateModalQty(-1)" class="w-12 h-full text-white text-xl font-bold active-scale flex items-center justify-center">−</button>
+                        <span id="modal-qty" class="w-8 text-center font-display font-bold text-lg">1</span>
+                        <button onclick="updateModalQty(1)" class="w-12 h-full text-white text-xl font-bold active-scale flex items-center justify-center">+</button>
+                    </div>
+                    <button onclick="addToCartFromModal()" class="flex-grow bg-[#FF4500] text-white font-bold h-14 rounded-xl active-scale text-base shadow-lg shadow-orange-900/20 flex items-center justify-center gap-2">
+                        <span>Agregar</span>
+                        <span id="modal-total-btn" class="bg-black/20 px-2 py-0.5 rounded text-sm">$0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO ---
+        let cart = [];
+        let currentModalProduct = null;
+        let modalQty = 1;
+        let selectedModifiers = [];
+        let activeCategoryId = "all"; // Nuevo estado para búsqueda
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener("DOMContentLoaded", () => {
+            initUI();
+            renderCategories();
+            renderProducts();
+            renderModifiers();
+
+            // Lógica de Búsqueda en tiempo real
+            document.getElementById("search-input").addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                renderProducts(activeCategoryId, term);
+            });
+        });
+
+        function initUI() {
+            document.getElementById("nav-name").innerText = BUSINESS_CONFIG.name;
+            document.getElementById("nav-logo").src = BUSINESS_CONFIG.logo;
+            document.getElementById("hero-bg").style.backgroundImage = `url('${BUSINESS_CONFIG.heroImage}')`;
+            document.getElementById("biz-address").innerText = BUSINESS_CONFIG.address;
+            document.getElementById("maps-link").href = `https://www.google.com/maps/place/5295%2BHR+Samy's+Food,+Valencia+2001,+Carabobo/@10.1689052,-67.9902661,16z/data=!4m6!3m5!1s0x8e80672a02a40829:0xf95e04297b70d1ce!8m2!3d10.1689052!4d-67.9902661!16s%2Fg%2F11sp0756m4?g_ep=Eg1tbF8yMDI2MDEyOF8xIOC7DCoASAJQAQ%3D%3D{encodeURIComponent(BUSINESS_CONFIG.address)}`;
+        }
+
+        // --- RENDERIZADO ---
+        function renderCategories() {
+            const container = document.getElementById("cat-container");
+            // Icono SVG para "Todos"
+            let html = `
+                <button onclick="setCat('all')" id="cat-all" 
+                    class="cat-active px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap border border-white/10 transition-all active-scale flex items-center gap-2 group">
+                    <span class="group-hover:scale-110 transition-transform">${ICONS.star}</span>
+                    <span>TODOS</span>
+                </button>`;
+            
+            BUSINESS_CONFIG.categories.forEach((cat) => {
+                html += `
+                <button onclick="setCat('${cat.id}')" id="cat-${cat.id}" 
+                    class="px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap bg-[#1A1A1A] text-gray-400 border border-white/5 transition-all active-scale flex items-center gap-2 cat-inactive">
+                    ${cat.icon}
+                    <span>${cat.name}</span>
+                </button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // Función Render Products Mejorada (acepta término de búsqueda)
+        function renderProducts(catId = "all", searchTerm = "") {
+            const grid = document.getElementById("product-grid");
+            const emptyState = document.getElementById("empty-state");
+            
+            // Filtro doble: Por categoría y por texto
+            const filtered = BUSINESS_CONFIG.products.filter(p => {
+                const matchesCategory = catId === "all" || p.categoryId === catId;
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+                                      p.description.toLowerCase().includes(searchTerm);
+                
+                // Si hay búsqueda activa, ignoramos la categoría para buscar en todo el menú
+                // O si prefieres buscar DENTRO de la categoría, usa: return matchesCategory && matchesSearch;
+                // La mejor UX suele ser: Si escribes, buscas en todo.
+                if (searchTerm.length > 0) return matchesSearch;
+                
+                return matchesCategory;
+            });
+
+            // Actualizar contador
+            const countText = searchTerm.length > 0 ? `Resultados para "${searchTerm}"` : (catId === 'all' ? 'Mostrando todo' : 'Filtrado por categoría');
+            document.getElementById("result-count").innerText = countText;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = "";
+                emptyState.classList.remove("hidden");
+            } else {
+                emptyState.classList.add("hidden");
+                grid.innerHTML = filtered.map(p => `
+                    <div class="bg-[#1A1A1A] rounded-[20px] p-3 border border-white/5 shadow-xl flex gap-4 items-center active-scale transition-transform" onclick="openModal(${p.id})">
+                        <div class="relative w-28 h-28 flex-shrink-0 rounded-2xl overflow-hidden bg-gray-800">
+                            <img src="${p.image}" class="w-full h-full object-cover" loading="lazy">
+                            ${p.hot ? '<div class="absolute bottom-0 left-0 w-full bg-[#FF4500] text-white text-[9px] font-bold text-center py-1 uppercase tracking-wider">Top Seller</div>' : ''}
+                        </div>
+                        <div class="flex-grow flex flex-col justify-between h-28 py-1">
+                            <div>
+                                <h3 class="font-display font-bold text-lg text-white leading-tight mb-1">${p.name}</h3>
+                                <p class="text-gray-500 text-xs line-clamp-2 leading-relaxed">${p.description}</p>
+                            </div>
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-display font-bold text-lg text-[#FF4500]">${BUSINESS_CONFIG.currency}${p.price.toFixed(2)}</span>
+                                <div class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold text-xl shadow-lg">+</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join("");
+            }
+        }
+        
+        function renderModifiers() {
+            const container = document.getElementById("modifiers-container");
+            container.innerHTML = BUSINESS_CONFIG.modifiers.map(mod => `
+                <label class="checkbox-wrapper flex items-center justify-between bg-[#1A1A1A] p-4 rounded-xl border border-white/5 active-scale cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="hidden" onchange="toggleModifier('${mod.id}', ${mod.price})" value="${mod.id}">
+                        <div class="w-5 h-5 rounded border border-gray-600 flex items-center justify-center transition-colors">
+                            <svg class="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-sm font-medium text-gray-300">${mod.name}</span>
+                    </div>
+                    <span class="text-sm font-bold text-white">+${BUSINESS_CONFIG.currency}${mod.price.toFixed(2)}</span>
+                </label>
+            `).join("");
+        }
+
+        // --- LÓGICA DE INTERACCIÓN ---
+        function setCat(id) {
+            activeCategoryId = id;
+            
+            // Limpiar buscador al cambiar categoría para evitar confusión
+            document.getElementById("search-input").value = "";
+
+            document.querySelectorAll("#cat-container button").forEach(b => {
+                b.className = "px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap bg-[#1A1A1A] text-gray-400 border border-white/5 transition-all active-scale flex items-center gap-2 cat-inactive";
+            });
+            const active = document.getElementById("cat-" + id);
+            active.className = "cat-active px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap border border-white/10 transition-all active-scale flex items-center gap-2";
+            
+            renderProducts(id);
+        }
+
+        // --- MODAL & LOGICA DE PRODUCTO (Igual que antes) ---
+        function openModal(id) {
+            const p = BUSINESS_CONFIG.products.find(x => x.id === id);
+            currentModalProduct = p;
+            modalQty = 1;
+            selectedModifiers = [];
+            
+            document.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = false);
+
+            document.getElementById("modal-img").src = p.image;
+            document.getElementById("modal-title").innerText = p.name;
+            document.getElementById("modal-desc").innerText = p.description;
+            document.getElementById("modal-price").innerText = `${BUSINESS_CONFIG.currency}${p.price.toFixed(2)}`;
+            document.getElementById("modal-qty").innerText = "1";
+            
+            updateModalTotalBtn();
+
+            const modal = document.getElementById("product-modal");
+            modal.classList.remove("hidden");
+            
+            setTimeout(() => {
+                document.getElementById("modal-backdrop").classList.remove("opacity-0");
+                document.getElementById("modal-content").classList.remove("translate-y-full");
+            }, 10);
+
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeModal() {
+            const backdrop = document.getElementById("modal-backdrop");
+            const content = document.getElementById("modal-content");
+            
+            backdrop.classList.add("opacity-0");
+            content.classList.add("translate-y-full");
+            
+            setTimeout(() => {
+                document.getElementById("product-modal").classList.add("hidden");
+                document.body.style.overflow = "auto";
+            }, 300);
+        }
+
+        function toggleModifier(id, price) {
+            const index = selectedModifiers.findIndex(m => m.id === id);
+            if(index > -1) {
+                selectedModifiers.splice(index, 1);
+            } else {
+                selectedModifiers.push(BUSINESS_CONFIG.modifiers.find(m => m.id === id));
+            }
+            updateModalTotalBtn();
+        }
+
+        function updateModalQty(delta) {
+            modalQty = Math.max(1, modalQty + delta);
+            document.getElementById("modal-qty").innerText = modalQty;
+            updateModalTotalBtn();
+        }
+        
+        function updateModalTotalBtn() {
+            const basePrice = currentModalProduct.price;
+            const modifiersPrice = selectedModifiers.reduce((acc, curr) => acc + curr.price, 0);
+            const total = (basePrice + modifiersPrice) * modalQty;
+            document.getElementById("modal-total-btn").innerText = `${BUSINESS_CONFIG.currency}${total.toFixed(2)}`;
+        }
+
+        function addToCartFromModal() {
+            const existingIndex = cart.findIndex(item => item.id === currentModalProduct.id && JSON.stringify(item.modifiers) === JSON.stringify(selectedModifiers));
+            
+            if (existingIndex > -1) {
+                cart[existingIndex].qty += modalQty;
+            } else {
+                cart.push({ 
+                    ...currentModalProduct, 
+                    qty: modalQty,
+                    modifiers: [...selectedModifiers],
+                    finalPrice: (currentModalProduct.price + selectedModifiers.reduce((a,b)=>a+b.price,0))
+                });
+            }
+            
+            updateCartUI();
+            closeModal();
+            showToast();
+        }
+        
+        function showToast() {
+            const toast = document.getElementById("toast");
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2000);
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById("cart-container");
+            if (cart.length > 0) {
+                container.style.transform = "translateY(0)";
+            } else {
+                container.style.transform = "translateY(150%)";
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            
+            document.getElementById("cart-total").innerText = `${BUSINESS_CONFIG.currency}${total.toFixed(2)}`;
+            document.getElementById("cart-items-qty").innerText = count;
+        }
+
+        function sendOrder() {
+            if(cart.length === 0) return;
+            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            
+            let text = ` *Hola ${BUSINESS_CONFIG.name}, quiero hacer un pedido:*\n\n`;
+            cart.forEach(item => {
+                text += `▪️ *${item.qty}x ${item.name}*\n`;
+                if(item.modifiers.length > 0) {
+                    text += `   _Extras: ${item.modifiers.map(m => m.name).join(', ')}_\n`;
+                }
+                text += `   $${(item.finalPrice * item.qty).toFixed(2)}\n\n`;
+            });
+            text += `--------------------------------\n`;
+            text += ` *TOTAL: ${BUSINESS_CONFIG.currency}${total.toFixed(2)}*\n`;
+            text += ` *Dirección de envío:* (Escribir aquí)`;
+            
+            window.open(`https://wa.me/${BUSINESS_CONFIG.phone}?text=${encodeURIComponent(text)}`, "_blank");
+        }
+    </script>
+</body>
+</html>
