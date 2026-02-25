@@ -231,7 +231,7 @@ export default function AdminPanel() {
               <div key={p.id} className="border-t border-white/5 pt-6 flex flex-col md:flex-row gap-4 relative group">
                 
                 {/* Botón Eliminar */}
-                <button onClick={() => handleDeleteProduct(p.id)} className="absolute top-6 right-0 text-zinc-600 hover:text-red-500 transition-colors p-1" title="Eliminar plato">
+                <button onClick={() => handleDeleteProduct(p.id)} className="absolute top-6 right-0 text-zinc-600 hover:text-red-400 transition-colors p-1" title="Eliminar plato">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
 
